@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
@@ -10,11 +12,41 @@ if (!API_KEY) {
 }
 
 const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-pro";
+const MAX_RETRIES = 3;
 const ai = new GoogleGenAI({ apiKey: API_KEY });
 
+async function generate(model, contents) {
+  let lastError;
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      const response = await ai.models.generateContent({ model, contents });
+      return response.text ?? "(empty response)";
+    } catch (err) {
+      lastError = err;
+      const status = err.status ?? err.httpStatusCode;
+      if (status === 429 || status >= 500) {
+        const delay = Math.pow(2, attempt) * 1000;
+        await new Promise((r) => setTimeout(r, delay));
+        continue;
+      }
+      throw err;
+    }
+  }
+  throw lastError;
+}
+
+function toolResult(text) {
+  return { content: [{ type: "text", text }] };
+}
+
+function errorResult(err) {
+  const msg = err.message ?? String(err);
+  return { content: [{ type: "text", text: `Error: ${msg}` }], isError: true };
+}
+
 const server = new McpServer({
-  name: "gemini",
-  version: "1.0.0",
+  name: "gemini-mcp",
+  version: "0.1.0",
 });
 
 server.tool(
@@ -30,19 +62,12 @@ server.tool(
       ),
   },
   async ({ prompt, model }) => {
-    const useModel = model || MODEL;
-    const response = await ai.models.generateContent({
-      model: useModel,
-      contents: prompt,
-    });
-    return {
-      content: [
-        {
-          type: "text",
-          text: response.text ?? "(empty response)",
-        },
-      ],
-    };
+    try {
+      const text = await generate(model || MODEL, prompt);
+      return toolResult(text);
+    } catch (err) {
+      return errorResult(err);
+    }
   }
 );
 
@@ -62,20 +87,13 @@ server.tool(
       .describe("Model override (default: gemini-2.5-pro)"),
   },
   async ({ instruction, content, model }) => {
-    const useModel = model || MODEL;
-    const prompt = `${instruction}\n\n---\n\n${content}`;
-    const response = await ai.models.generateContent({
-      model: useModel,
-      contents: prompt,
-    });
-    return {
-      content: [
-        {
-          type: "text",
-          text: response.text ?? "(empty response)",
-        },
-      ],
-    };
+    try {
+      const prompt = `${instruction}\n\n---\n\n${content}`;
+      const text = await generate(model || MODEL, prompt);
+      return toolResult(text);
+    } catch (err) {
+      return errorResult(err);
+    }
   }
 );
 
@@ -97,23 +115,39 @@ server.tool(
       .describe("Model override (default: gemini-2.5-pro)"),
   },
   async ({ messages, model }) => {
-    const useModel = model || MODEL;
-    const contents = messages.map((m) => ({
-      role: m.role,
-      parts: [{ text: m.text }],
-    }));
-    const response = await ai.models.generateContent({
-      model: useModel,
-      contents,
-    });
-    return {
-      content: [
-        {
-          type: "text",
-          text: response.text ?? "(empty response)",
-        },
-      ],
-    };
+    try {
+      const contents = messages.map((m) => ({
+        role: m.role,
+        parts: [{ text: m.text }],
+      }));
+      const text = await generate(model || MODEL, contents);
+      return toolResult(text);
+    } catch (err) {
+      return errorResult(err);
+    }
+  }
+);
+
+server.tool(
+  "gemini_models",
+  "List available Gemini models.",
+  {},
+  async () => {
+    try {
+      const pager = await ai.models.list();
+      const models = [];
+      for await (const m of pager) {
+        models.push({
+          name: m.name,
+          displayName: m.displayName,
+          inputTokenLimit: m.inputTokenLimit,
+          outputTokenLimit: m.outputTokenLimit,
+        });
+      }
+      return toolResult(JSON.stringify(models, null, 2));
+    } catch (err) {
+      return errorResult(err);
+    }
   }
 );
 

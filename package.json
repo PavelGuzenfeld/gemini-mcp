@@ -1,12 +1,39 @@
 {
   "name": "gemini-mcp",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "MCP server that exposes Google Gemini as tools for Claude Code",
   "type": "module",
   "main": "index.js",
-  "scripts": {
-    "start": "node index.js"
+  "bin": {
+    "gemini-mcp": "index.js"
   },
+  "scripts": {
+    "start": "node index.js",
+    "test": "node --test test/smoke.test.js"
+  },
+  "keywords": [
+    "mcp",
+    "gemini",
+    "claude",
+    "claude-code",
+    "google-ai",
+    "model-context-protocol"
+  ],
+  "author": "Pavel Guzenfeld",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PavelGuzenfeld/gemini-mcp.git"
+  },
+  "homepage": "https://github.com/PavelGuzenfeld/gemini-mcp#readme",
+  "engines": {
+    "node": ">=20"
+  },
+  "files": [
+    "index.js",
+    "LICENSE",
+    "README.md"
+  ],
   "dependencies": {
     "@google/genai": "^1.16.0",
     "@modelcontextprotocol/sdk": "^1.0.0",
