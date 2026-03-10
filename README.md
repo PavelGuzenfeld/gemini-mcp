@@ -1,5 +1,9 @@
 # gemini-mcp
 
+[![npm](https://img.shields.io/npm/v/claude-gemini-mcp)](https://www.npmjs.com/package/claude-gemini-mcp)
+[![MCP Registry](https://img.shields.io/badge/MCP-Registry-blue)](https://registry.modelcontextprotocol.io)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 Lightweight [MCP](https://modelcontextprotocol.io) server that exposes Google Gemini as tools for Claude Code (or any MCP client).
 
 Use Gemini for second opinions, large-context analysis, code review, or anything where a different model perspective helps.
@@ -32,7 +36,7 @@ npm install
 **Option B — npx (no install)**
 
 ```bash
-npx gemini-mcp
+npx claude-gemini-mcp
 ```
 
 ### 3. Register with Claude Code
@@ -60,7 +64,7 @@ Or with npx:
   "mcpServers": {
     "gemini": {
       "command": "npx",
-      "args": ["-y", "gemini-mcp"],
+      "args": ["-y", "claude-gemini-mcp"],
       "env": {
         "GEMINI_API_KEY": "your-key-here"
       }
