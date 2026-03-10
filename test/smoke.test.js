@@ -5,7 +5,7 @@ describe("gemini-mcp", () => {
   it("package.json has correct structure", async () => {
     const pkg = (await import("../package.json", { with: { type: "json" } }))
       .default;
-    assert.equal(pkg.name, "gemini-mcp");
+    assert.equal(pkg.name, "claude-gemini-mcp");
     assert.match(pkg.version, /^\d+\.\d+\.\d+$/);
     assert.equal(pkg.type, "module");
     assert.ok(pkg.dependencies["@google/genai"]);
