@@ -1,7 +1,7 @@
 {
   "name": "claude-gemini-mcp",
-  "version": "0.1.1",
-  "mcpName": "io.github.pavelguzenfeld/gemini",
+  "version": "0.1.2",
+  "mcpName": "io.github.PavelGuzenfeld/gemini",
   "description": "MCP server that exposes Google Gemini as tools for Claude Code",
   "type": "module",
   "main": "index.js",
